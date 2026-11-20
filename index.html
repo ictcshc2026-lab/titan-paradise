@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RECON // Paradis Titan Command</title>
+  <style>
+    :root {
+      --bg-void: #0d0f0e;
+      --bg-panel: #151917;
+      --bg-card: #1b201d;
+      --bg-elevated: #232a26;
+      --line-subtle: rgba(163, 177, 168, 0.16);
+      --line-accent: #d4a359;
+      --text-main: #edf0ec;
+      --text-dim: #9aa59e;
+      --scout-green: #2d6a4f;
+      --scout-bright: #40916c;
+      --flare-crimson: #d62828;
+      --flare-amber: #f77f00;
+      --ok: #38b000;
+      --err: #ef233c;
+      --chamfer: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      --chamfer-sm: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Bahnschrift", "DIN Alternate", "Inter", system-ui, sans-serif;
+      background-color: var(--bg-void);
+      color: var(--text-main);
+      line-height: 1.55;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 85% 12%, rgba(64, 145, 108, 0.14), transparent 36%),
+        radial-gradient(circle at 12% 78%, rgba(214, 40, 40, 0.11), transparent 40%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+    }
+
+    /* Animated ambient drift bar at top */
+    .top-beacon {
+      height: 3px;
+      width: 100%;
+      background: linear-gradient(90deg, var(--flare-crimson), var(--line-accent), var(--scout-bright), var(--flare-crimson));
+      background-size: 200% 100%;
+      animation: beaconSlide 7s linear infinite;
+    }
+
+    @keyframes beaconSlide {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    .wrap {
+      max-width: 1260px;
+      margin: 0 auto;
+      padding: 0 22px;
+    }
+
+    /* HUD Header */
+    header.hud-bar {
+      position: sticky;
+      top: 0;
+      z-index: 60;
+      background: rgba(13, 15, 14, 0.86);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line-subtle);
+    }
+
+    .hud-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 64px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+
+    .wings-emblem {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--scout-green), #173628);
+      border: 1px solid var(--line-accent);
+      clip-path: var(--chamfer-sm);
+      font-weight: 900;
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      color: var(--line-accent);
+    }
+
+    .logo-text strong {
+      display: block;
+      font-size: 0.95rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .logo-text span {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hud-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .hud-link {
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 14px;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .hud-link:hover,
+    .hud-link.active {
+      color: var(--text-main);
+      border-bottom-color: var(--line-accent);
+    }
+
+    /* Custom HUD Buttons */
+    .hud-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 20px;
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      clip-path: var(--chamfer-sm);
+      transition: transform 0.16s ease, filter 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hud-btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.08);
+    }
+
+    .hud-btn:active {
+      transform: translateY(1px) scale(0.985);
+    }
+
+    .btn-flare {
+      background: linear-gradient(135deg, var(--flare-crimson), #8f1818);
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(214, 40, 40, 0.28);
+    }
+
+    .btn-recon {
+      background: linear-gradient(135deg, var(--scout-bright), var(--scout-green));
+      color: #fff;
+      box-shadow: 0 8px 22px rgba(64, 145, 108, 0.25);
+    }
+
+    .btn-ghost {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      box-shadow: inset 0 0 0 1px var(--line-subtle);
+    }
+
+    .btn-ghost:hover {
+      box-shadow: inset 0 0 0 1px var(--line-accent);
+    }
+
+    .btn-pill {
+      border-radius: 999px;
+      clip-path: none;
+      padding: 7px 14px;
+      font-size: 0.76rem;
+    }
+
+    /* Asymmetric Hero */
+    .hero {
+      padding: 54px 0 42px;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 0.85fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-main {
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      clip-path: var(--chamfer);
+      padding: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-main::after {
+      content: "WALL MARIA // WALL ROSE // WALL SINA";
+      position: absolute;
+      right: -28px;
+      bottom: 16px;
+      font-size: 0.7rem;
+      letter-spacing: 0.28em;
+      color: rgba(212, 163, 89, 0.22);
+      transform: rotate(-90deg);
+      transform-origin: right bottom;
+      pointer-events: none;
+    }
+
+    .signal-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--line-accent);
+      margin-bottom: 14px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--flare-crimson);
+      box-shadow: 0 0 0 0 rgba(214, 40, 40, 0.7);
+      animation: pulseRing 2s infinite;
+    }
+
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(214, 40, 40, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(214, 40, 40, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(214, 40, 40, 0); }
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4.2vw, 3.25rem);
+      line-height: 1.06;
+      text-transform: uppercase;
+      letter-spacing: 0.01em;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--line-accent);
+    }
+
+    .hero p {
+      color: var(--text-dim);
+      font-size: 1rem;
+      max-width: 56ch;
+      margin-bottom: 24px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Side Telemetry Card */
+    .telemetry-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      clip-path: var(--chamfer);
+      padding: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .telemetry-panel h2 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--line-accent);
+      margin-bottom: 6px;
+    }
+
+    .sector-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sector-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--bg-card);
+      border: 1px solid var(--line-subtle);
+      border-left: 4px solid var(--scout-bright);
+      padding: 12px 14px;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+    }
+
+    .sector-btn:hover {
+      transform: translateX(4px);
+      background: var(--bg-elevated);
+      border-left-color: var(--line-accent);
+    }
+
+    .sector-btn strong {
+      display: block;
+      font-size: 0.92rem;
+    }
+
+    .sector-btn small {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+
+    .stat-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line-subtle);
+      text-align: center;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 1.25rem;
+      color: var(--line-accent);
+    }
+
+    .stat-box span {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* Sections */
+    section.deck-section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+
+    .deck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+    }
+
+    .deck-header h2 {
+      font-size: clamp(1.45rem, 2.8vw, 2.05rem);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .deck-header p {
+      color: var(--text-dim);
+      max-width: 56ch;
+      font-size: 0.94rem;
+    }
+
+    /* Toolbar: Filters + Layout Switcher */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+      padding: 12px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      border-radius: 8px;
+    }
+
+    .chip-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: var(--bg-card);
+      color: var(--text-dim);
+      border: 1px solid var(--line-subtle);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .chip:hover {
+      color: var(--text-main);
+      border-color: var(--line-accent);
+    }
+
+    .chip.active {
+      background: var(--line-accent);
+      color: #0d0f0e;
+      border-color: var(--line-accent);
+    }
+
+    .view-switch {
+      display: flex;
+      gap: 6px;
+      background: var(--bg-void);
+      padding: 4px;
+      border-radius: 7px;
+      border: 1px solid var(--line-subtle);
+    }
+
+    .view-btn {
+      background: transparent;
+      color: var(--text-dim);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .view-btn.active {
+      background: var(--scout-green);
+      color: #fff;
+    }
+
+    /* Card Grid Format */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+      gap: 20px;
+    }
+
+    .dossier-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line-subtle);
+      clip-path: var(--chamfer);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(20px) scale(0.99);
+      transition: opacity 0.45s ease, transform 0.45s ease, border-color 0.25s ease;
+    }
+
+    .dossier-card.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .dossier-card:hover {
+      border-color: var(--line-accent);
+    }
+
+    .media-slot {
+      position: relative;
+      height: 170px;
+      background: linear-gradient(135deg, #212925, #111513);
+      border-bottom: 1px solid var(--line-subtle);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .media-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .media-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      background: rgba(13, 15, 14, 0.82);
+      border: 1px solid var(--line-accent);
+      color: var(--line-accent);
+    }
+
+    .photo-box {
+      text-align: center;
+      padding: 12px;
+      color: var(--text-dim);
+    }
+
+    .photo-box .code {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--text-main);
+      margin-bottom: 4px;
+    }
+
+    .photo-box small {
+      font-size: 0.74rem;
+    }
+
+    .dossier-body {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .dossier-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .dossier-head h3 {
+      font-size: 1.15rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .metric {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: var(--line-accent);
+      white-space: nowrap;
+    }
+
+    .dossier-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .dossier-desc {
+      font-size: 0.9rem;
+      color: var(--text-main);
+      flex: 1;
+      margin-bottom: 16px;
+    }
+
+    .dossier-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line-subtle);
+    }
+
+    /* Split Command Inspector Format */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 20px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      clip-path: var(--chamfer);
+      padding: 20px;
+    }
+
+    .titan-index-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 460px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .index-item {
+      background: var(--bg-card);
+      color: var(--text-dim);
+      border: 1px solid var(--line-subtle);
+      padding: 10px 12px;
+      text-align: left;
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.16s ease;
+    }
+
+    .index-item:hover {
+      color: var(--text-main);
+      border-color: var(--line-accent);
+    }
+
+    .index-item.selected {
+      background: var(--bg-elevated);
+      color: var(--line-accent);
+      border-left: 4px solid var(--line-accent);
+    }
+
+    .inspector-pane {
+      background: var(--bg-card);
+      border: 1px solid var(--line-subtle);
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .inspector-photo {
+      height: 190px;
+      background: var(--bg-void);
+      border: 1px dashed var(--line-accent);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 12px;
+      color: var(--text-dim);
+    }
+
+    /* Spec Matrix Table */
+    .matrix-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      clip-path: var(--chamfer);
+      overflow-x: auto;
+    }
+
+    table.matrix {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 680px;
+    }
+
+    table.matrix th,
+    table.matrix td {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line-subtle);
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    table.matrix th {
+      background: var(--bg-elevated);
+      color: var(--line-accent);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Questionnaire Deck */
+    .quiz-deck {
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      clip-path: var(--chamfer);
+      padding: 28px;
+    }
+
+    .quiz-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line-subtle);
+    }
+
+    .meter-bar {
+      flex: 1;
+      min-width: 180px;
+      height: 8px;
+      background: var(--bg-void);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--scout-bright), var(--line-accent));
+      transition: width 0.3s ease;
+    }
+
+    .q-card {
+      background: var(--bg-card);
+      border: 1px solid var(--line-subtle);
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .q-prompt {
+      font-weight: 700;
+      margin-bottom: 12px;
+      font-size: 0.98rem;
+    }
+
+    .q-choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+    }
+
+    .choice-tile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line-subtle);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+
+    .choice-tile:hover {
+      border-color: var(--line-accent);
+    }
+
+    .choice-tile.right {
+      border-color: var(--ok);
+      background: rgba(56, 176, 0, 0.14);
+    }
+
+    .choice-tile.wrong {
+      border-color: var(--err);
+      background: rgba(239, 35, 60, 0.14);
+    }
+
+    .q-note {
+      margin-top: 10px;
+      font-size: 0.84rem;
+      color: var(--text-dim);
+      display: none;
+    }
+
+    .q-note.visible {
+      display: block;
+    }
+
+    .report-banner {
+      margin-top: 20px;
+      padding: 18px 20px;
+      background: var(--bg-card);
+      border-left: 4px solid var(--line-accent);
+      display: none;
+      animation: popIn 0.3s ease;
+    }
+
+    .report-banner.show {
+      display: block;
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modal */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(5px);
+      z-index: 120;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 580px;
+      background: var(--bg-panel);
+      border: 1px solid var(--line-accent);
+      clip-path: var(--chamfer);
+      padding: 26px;
+      max-height: 88vh;
+      overflow-y: auto;
+      animation: popIn 0.22s ease;
+    }
+
+    .modal-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .spec-bullets {
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      margin: 14px 0 20px;
+    }
+
+    .spec-bullets li {
+      background: var(--bg-card);
+      border: 1px solid var(--line-subtle);
+      padding: 10px 12px;
+      font-size: 0.88rem;
+    }
+
+    footer {
+      padding: 32px 0 44px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    @media (max-width: 900px) {
+      .hero-layout,
+      .split-layout,
+      .inspector-pane {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-beacon"></div>
+
+  <header class="hud-bar">
+    <div class="wrap hud-inner">
+      <a href="#top" class="logo">
+        <span class="wings-emblem">SC-50</span>
+        <span class="logo-text">
+          <strong>Paradis Command</strong>
+          <span>Titan Recon &amp; Wall Deck</span>
+        </span>
+      </a>
+
+      <nav class="hud-nav" aria-label="Main navigation">
+        <a href="#archive" class="hud-link active">Archive</a>
+        <a href="#matrix" class="hud-link">Specs</a>
+        <a href="#briefing" class="hud-link">Questionnaire</a>
+      </nav>
+
+      <a href="#briefing" class="hud-btn btn-flare btn-pill">Start Quiz</a>
+    </div>
+  </header>
+
+  <section id="top" class="hero">
+    <div class="wrap hero-layout">
+      <div class="hero-main">
+        <div class="signal-tag">
+          <span class="pulse-dot"></span>
+          <span>Perimeter Status: 50m Stone Walls Active</span>
+        </div>
+        <h1>Titans of Paradis <em>Recon Deck</em></h1>
+        <p>
+          A tactical command layout cataloging all <strong>Nine Titans</strong> and
+          <strong>Pure Titans</strong>. Switch between a card grid and a split-screen dossier
+          inspector, filter threats, pin priority targets, and complete the field questionnaire.
+        </p>
+        <div class="cta-row">
+          <a href="#archive" class="hud-btn btn-recon">Open Titan Deck</a>
+          <button type="button" id="randomTitanBtn" class="hud-btn btn-ghost">Random Intel</button>
+        </div>
+      </div>
+
+      <aside class="telemetry-panel">
+        <div>
+          <h2>Wall Sector Quick-Jump</h2>
+          <div class="sector-list">
+            <button type="button" class="sector-btn" data-filter="pure">
+              <span>
+                <strong>Maria Sector (Outer)</strong>
+                <small>Pure &amp; breach response</small>
+              </span>
+              <span class="metric">50M</span>
+            </button>
+            <button type="button" class="sector-btn" data-filter="nine">
+              <span>
+                <strong>Rose Sector (Central)</strong>
+                <small>Shifter &amp; Scout operations</small>
+              </span>
+              <span class="metric">50M</span>
+            </button>
+            <button type="button" class="sector-btn" data-filter="all">
+              <span>
+                <strong>Sina Sector (Citadel)</strong>
+                <small>Full Nine + Pure archive</small>
+              </span>
+              <span class="metric">50M</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="stat-strip">
+          <div class="stat-box">
+            <strong>9</strong>
+            <span>Shifters</span>
+          </div>
+          <div class="stat-box">
+            <strong>1</strong>
+            <span>Pure Class</span>
+          </div>
+          <div class="stat-box">
+            <strong id="hudPinnedCount">0</strong>
+            <span>Pinned</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <main>
+    <section id="archive" class="deck-section">
+      <div class="wrap">
+        <div class="deck-header">
+          <div>
+            <h2>Titan Classification Deck</h2>
+            <p>
+              Toggle between <strong>Grid</strong> and <strong>Split Inspector</strong> views, filter
+              by type, or pin targets for quick review.
+            </p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="chip-group" role="group" aria-label="Titan filters">
+            <button type="button" class="chip active" data-filter="all">All (10)</button>
+            <button type="button" class="chip" data-filter="nine">Nine Titans (9)</button>
+            <button type="button" class="chip" data-filter="pure">Pure Titans (1)</button>
+            <button type="button" class="chip" data-filter="pinned">Pinned</button>
+          </div>
+
+          <div class="view-switch" role="group" aria-label="Layout mode">
+            <button type="button" class="view-btn active" data-view="grid">Grid View</button>
+            <button type="button" class="view-btn" data-view="split">Split Inspector</button>
+          </div>
+        </div>
+
+        <div id="gridContainer" class="cards-grid"></div>
+        <div id="splitContainer" class="split-layout" style="display: none;"></div>
+      </div>
+    </section>
+
+    <section id="matrix" class="deck-section">
+      <div class="wrap">
+        <div class="deck-header">
+          <div>
+            <h2>Height &amp; Capability Matrix</h2>
+            <p>Compact tactical comparison across all ten Titan entries.</p>
+          </div>
+        </div>
+
+        <div class="matrix-box">
+          <table class="matrix">
+            <thead>
+              <tr>
+                <th>Titan Type</th>
+                <th>Class</th>
+                <th>Approx. Height</th>
+                <th>Primary Edge</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="briefing" class="deck-section">
+      <div class="wrap">
+        <div class="deck-header">
+          <div>
+            <h2>Field Knowledge Questionnaire</h2>
+            <p>Test your Titan reconnaissance knowledge and submit for instant grading.</p>
+          </div>
+        </div>
+
+        <form id="quizForm" class="quiz-deck" novalidate>
+          <div class="quiz-topbar">
+            <span id="qCounter" class="metric">0 / 5 Answered</span>
+            <div class="meter-bar">
+              <div id="qMeter" class="meter-fill"></div>
+            </div>
+            <button type="button" id="qResetBtn" class="hud-btn btn-ghost btn-pill">Reset</button>
+          </div>
+
+          <div id="qList"></div>
+
+          <div class="cta-row" style="margin-top: 10px;">
+            <button type="submit" class="hud-btn btn-flare">Grade Questionnaire</button>
+          </div>
+
+          <div id="qBanner" class="report-banner" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h3 id="mTitle" style="text-transform: uppercase; letter-spacing: 0.04em;">Dossier</h3>
+        <button type="button" id="mClose" class="hud-btn btn-ghost btn-pill">Close &times;</button>
+      </div>
+      <div id="mBody"></div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="wrap">Paradis Recon Deck • Custom HTML, CSS &amp; JavaScript Interface</div>
+  </footer>
+
+  <script>
+    const TITANS = [
+      {
+        id: "founding",
+        name: "Founding Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~13m (varies)",
+        holders: "Ymir Fritz, Frieda Reiss, Grisha & Eren Yeager",
+        desc: "Apex Titan able to command other Titans, reshape Eldian physiology, and alter memories via the Paths.",
+        traits: [
+          "Direct command over Pure Titans and Coordinate authority.",
+          "Can alter Eldian bodies and memories across subjects."
+        ],
+        flaw: "Historically restricted by the vow renouncing war when held by royal-blood inheritors."
+      },
+      {
+        id: "attack",
+        name: "Attack Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~15m",
+        holders: "Eren Kruger, Grisha Yeager, Eren Yeager",
+        desc: "Relentless vanguard Titan defined by its pursuit of freedom and glimpse of future inheritor memories.",
+        traits: [
+          "High close-quarters grit, stamina, and rapid healing.",
+          "Memory link across past and future inheritors."
+        ],
+        flaw: "No built-in heavy armor plating or ranged artillery capability."
+      },
+      {
+        id: "colossal",
+        name: "Colossal Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~60m",
+        holders: "Bertholdt Hoover, Armin Arlert",
+        desc: "Massive Titan surpassing the 50m Walls, capable of explosive transformations and scorching steam bursts.",
+        traits: [
+          "Extreme scale and blast radius upon shifting.",
+          "Dense steam release that repels ODM gear and cannon fire."
+        ],
+        flaw: "Low mobility and rapid stamina/mass drain when venting steam."
+      },
+      {
+        id: "armored",
+        name: "Armored Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~15m",
+        holders: "Reiner Braun",
+        desc: "Heavy assault Titan protected by hardened dermal plates built to smash through fortified gates.",
+        traits: [
+          "Tough exterior armor against blades and standard artillery.",
+          "Strong frontal charge and impact resistance."
+        ],
+        flaw: "Joint articulation gaps and vulnerability to concentrated explosives like Thunder Spears."
+      },
+      {
+        id: "female",
+        name: "Female Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~14m",
+        holders: "Annie Leonhart",
+        desc: "Nimble combat Titan skilled in martial arts, localized hardening, and attracting Pure Titans with a roar.",
+        traits: [
+          "Balanced agility, martial technique, and endurance.",
+          "Localized hardening and scream-based Pure Titan attraction."
+        ],
+        flaw: "Localized hardening and regeneration consume notable energy reserves."
+      },
+      {
+        id: "beast",
+        name: "Beast Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~17m",
+        holders: "Zeke Yeager, Tom Ksaver",
+        desc: "Ape-like Titan renowned for long-range throwing precision and spinal-fluid Titan manipulation.",
+        traits: [
+          "Devastating long-range projectile accuracy.",
+          "Can command Titans formed from his spinal fluid."
+        ],
+        flaw: "Long reach can leave close-range openings around the nape if flanked quickly."
+      },
+      {
+        id: "jaw",
+        name: "Jaw Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~5m",
+        holders: "Marcel Galliard, Ymir, Porco Galliard, Falco Grice",
+        desc: "Compact, fast Titan armed with hardened jaws and claws able to bite through hardened Titan material.",
+        traits: [
+          "High speed, agility, and small target profile.",
+          "Hardened bite/claws capable of cracking crystal and armor."
+        ],
+        flaw: "Small size limits mass and reach against larger Titans."
+      },
+      {
+        id: "cart",
+        name: "Cart Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~4m",
+        holders: "Pieck Finger",
+        desc: "Quadrupedal endurance Titan engineered for long deployments, supply runs, and mounted weapons.",
+        traits: [
+          "Extended transformation duration and high stamina.",
+          "Supports mounted turrets, gear, and fast repositioning."
+        ],
+        flaw: "Lower raw melee strength in direct close-quarters brawls without support."
+      },
+      {
+        id: "warhammer",
+        name: "War Hammer Titan",
+        cls: "nine",
+        clsLabel: "Nine Titans",
+        height: "~15m",
+        holders: "Lara Tybur, Eren Yeager",
+        desc: "Construct Titan that shapes weapons and structures from hardened flesh while linking to a crystalized user.",
+        traits: [
+          "Creates hammers, blades, spikes, and barriers on demand.",
+          "Remote operation via a flexible cord from the user's crystal."
+        ],
+        flaw: "Locating or severing the cord linked to the user's crystal breaks control."
+      },
+      {
+        id: "pure",
+        name: "Pure Titan",
+        cls: "pure",
+        clsLabel: "Pure Titans",
+        height: "3m – 15m (rarely taller)",
+        holders: "Eldians injected with Titan spinal fluid",
+        desc: "Mindless Titans driven to consume humans in search of a shifter to regain human form.",
+        traits: [
+          "Large numbers, steady regeneration, and persistent pursuit.",
+          "Often inactive without sunlight (except noted variants)."
+        ],
+        flaw: "No tactical reasoning; defeated by cutting the nape of the neck."
+      }
+    ];
+
+    const QUESTIONS = [
+      {
+        id: "q1",
+        text: "1. Which Titan stands roughly 60 meters tall and vents scalding steam?",
+        opts: ["Cart Titan", "Colossal Titan", "Jaw Titan", "Female Titan"],
+        ans: 1,
+        note: "The Colossal Titan is around 60m tall and releases high-temperature steam."
+      },
+      {
+        id: "q2",
+        text: "2. Which Titan excels at long deployments on four legs and carrying mounted weapons?",
+        opts: ["Cart Titan", "Armored Titan", "Attack Titan", "Founding Titan"],
+        ans: 0,
+        note: "The Cart Titan is prized for endurance, long stays in Titan form, and mounted gear."
+      },
+      {
+        id: "q3",
+        text: "3. Which Titan crafts weapons from hardened flesh and can operate remotely from a crystal?",
+        opts: ["Beast Titan", "War Hammer Titan", "Pure Titan", "Jaw Titan"],
+        ans: 1,
+        note: "The War Hammer Titan forges hardened weapons/structures and links to its crystalized user."
+      },
+      {
+        id: "q4",
+        text: "4. Where is the standard fatal weak point for most Titans?",
+        opts: ["Back of the neck (nape)", "Left knee", "Forehead", "Shoulder blade"],
+        ans: 0,
+        note: "Severing the nape of the neck disables regeneration in standard and shifter Titans."
+      },
+      {
+        id: "q5",
+        text: "5. How many Titans are counted among the Nine Titans?",
+        opts: ["6", "8", "9", "10"],
+        ans: 2,
+        note: "There are Nine Titans in total, plus Pure Titans."
+      }
+    ];
+
+    let filterMode = "all";
+    let viewMode = "grid";
+    let selectedSplitId = TITANS[0].id;
+    const pinned = new Set();
+
+    const gridContainer = document.getElementById("gridContainer");
+    const splitContainer = document.getElementById("splitContainer");
+    const matrixBody = document.getElementById("matrixBody");
+    const hudPinnedCount = document.getElementById("hudPinnedCount");
+    const overlay = document.getElementById("modalOverlay");
+    const mTitle = document.getElementById("mTitle");
+    const mBody = document.getElementById("mBody");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            e.target.classList.add("visible");
+            observer.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    function getItems() {
+      if (filterMode === "all") return TITANS;
+      if (filterMode === "pinned") return TITANS.filter((t) => pinned.has(t.id));
+      return TITANS.filter((t) => t.cls === filterMode);
+    }
+
+    function syncPinnedHUD() {
+      hudPinnedCount.textContent = String(pinned.size);
+    }
+
+    function renderMatrix() {
+      matrixBody.innerHTML = TITANS.map(
+        (t) => `
+          <tr>
+            <td><strong>${t.name}</strong></td>
+            <td>${t.clsLabel}</td>
+            <td>${t.height}</td>
+            <td>${t.traits[0]}</td>
+          </tr>
+        `
+      ).join("");
+    }
+
+    function renderGrid() {
+      const items = getItems();
+      if (!items.length) {
+        gridContainer.innerHTML = `
+          <div class="q-card" style="grid-column: 1 / -1; text-align: center;">
+            <p class="q-prompt">No Titans in this filter yet.</p>
+            <button type="button" id="resetFilterBtn" class="hud-btn btn-recon btn-pill">Show All Titans</button>
+          </div>
+        `;
+        const btn = document.getElementById("resetFilterBtn");
+        if (btn) btn.addEventListener("click", () => setFilter("all"));
+        return;
+      }
+
+      gridContainer.innerHTML = items
+        .map((t, i) => {
+          const isPinned = pinned.has(t.id);
+          const tag = t.name
+            .split(" ")
+            .map((w) => w[0])
+            .join("")
+            .slice(0, 2);
+
+          return `
+            <article class="dossier-card" style="transition-delay: ${Math.min(i * 40, 240)}ms;">
+              <div class="media-slot">
+                <span class="media-badge">${t.clsLabel}</span>
+                <div class="photo-box">
+                  <div class="code">${tag}</div>
+                  <small>Photo Slot: ${t.name}</small>
+                </div>
+              </div>
+              <div class="dossier-body">
+                <div class="dossier-head">
+                  <h3>${t.name}</h3>
+                  <span class="metric">${t.height}</span>
+                </div>
+                <div class="dossier-sub">${t.holders}</div>
+                <p class="dossier-desc">${t.desc}</p>
+                <div class="dossier-foot">
+                  <button type="button" class="hud-btn btn-recon btn-pill open-m" data-id="${t.id}">Inspect</button>
+                  <button type="button" class="chip pin-toggle" data-id="${t.id}">
+                    ${isPinned ? "Pinned ★" : "Pin ☆"}
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+
+      gridContainer.querySelectorAll(".dossier-card").forEach((el) => observer.observe(el));
+      gridContainer.querySelectorAll(".open-m").forEach((b) =>
+        b.addEventListener("click", () => openModal(b.dataset.id))
+      );
+      gridContainer.querySelectorAll(".pin-toggle").forEach((b) =>
+        b.addEventListener("click", () => togglePin(b.dataset.id))
+      );
+    }
+
+    function renderSplit() {
+      const items = getItems();
+      if (!items.length) {
+        splitContainer.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 24px;">
+            <p class="q-prompt">No Titans match this filter.</p>
+            <button type="button" id="splitResetBtn" class="hud-btn btn-recon btn-pill">Show All</button>
+          </div>
+        `;
+        const b = document.getElementById("splitResetBtn");
+        if (b) b.addEventListener("click", () => setFilter("all"));
+        return;
+      }
+
+      if (!items.some((t) => t.id === selectedSplitId)) {
+        selectedSplitId = items[0].id;
+      }
+      const active = items.find((t) => t.id === selectedSplitId) || items[0];
+      const isPinned = pinned.has(active.id);
+
+      splitContainer.innerHTML = `
+        <div class="titan-index-list">
+          ${items
+            .map(
+              (t) => `
+                <button type="button" class="index-item ${t.id === active.id ? "selected" : ""}" data-select="${t.id}">
+                  <span>${t.name}</span>
+                  <span class="metric">${t.height}</span>
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+        <div class="inspector-pane">
+          <div class="inspector-photo">
+            <div>
+              <div class="code" style="font-size: 1.4rem; font-weight: 900; color: var(--line-accent);">${active.name}</div>
+              <small>Photo Slot (${active.clsLabel})</small>
+            </div>
+          </div>
+          <div>
+            <div class="dossier-head">
+              <h3 style="font-size: 1.35rem; text-transform: uppercase;">${active.name}</h3>
+              <span class="metric">${active.height}</span>
+            </div>
+            <p class="dossier-sub"><strong>Record:</strong> ${active.holders}</p>
+            <p style="margin-bottom: 12px;">${active.desc}</p>
+            <ul class="spec-bullets" style="margin: 0 0 16px;">
+              ${active.traits.map((tr) => `<li><strong>Edge:</strong> ${tr}</li>`).join("")}
+              <li><strong>Vulnerability:</strong> ${active.flaw}</li>
+            </ul>
+            <div class="cta-row">
+              <button type="button" class="hud-btn btn-flare btn-pill open-m" data-id="${active.id}">Full Modal</button>
+              <button type="button" class="chip pin-toggle" data-id="${active.id}">
+                ${isPinned ? "Pinned ★" : "Pin ☆"}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      splitContainer.querySelectorAll("[data-select]").forEach((btn) =>
+        btn.addEventListener("click", () => {
+          selectedSplitId = btn.dataset.select;
+          renderSplit();
+        })
+      );
+      splitContainer.querySelectorAll(".open-m").forEach((b) =>
+        b.addEventListener("click", () => openModal(b.dataset.id))
+      );
+      splitContainer.querySelectorAll(".pin-toggle").forEach((b) =>
+        b.addEventListener("click", () => togglePin(b.dataset.id))
+      );
+    }
+
+    function renderDeck() {
+      syncPinnedHUD();
+      if (viewMode === "grid") {
+        gridContainer.style.display = "grid";
+        splitContainer.style.display = "none";
+        renderGrid();
+      } else {
+        gridContainer.style.display = "none";
+        splitContainer.style.display = "grid";
+        renderSplit();
+      }
+    }
+
+    function togglePin(id) {
+      if (pinned.has(id)) pinned.delete(id);
+      else pinned.add(id);
+      renderDeck();
+    }
+
+    function setFilter(mode) {
+      filterMode = mode;
+      document.querySelectorAll(".chip[data-filter]").forEach((c) => {
+        c.classList.toggle("active", c.dataset.filter === mode);
+      });
+      renderDeck();
+    }
+
+    document.querySelectorAll(".chip[data-filter]").forEach((c) =>
+      c.addEventListener("click", () => setFilter(c.dataset.filter))
+    );
+
+    document.querySelectorAll(".view-btn[data-view]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        viewMode = btn.dataset.view;
+        document.querySelectorAll(".view-btn").forEach((b) =>
+          b.classList.toggle("active", b.dataset.view === viewMode)
+        );
+        renderDeck();
+      });
+    });
+
+    document.querySelectorAll(".sector-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setFilter(btn.dataset.filter || "all");
+        document.getElementById("archive").scrollIntoView({ behavior: "smooth" });
+      });
+    });
+
+    document.getElementById("randomTitanBtn").addEventListener("click", () => {
+      const pick = TITANS[Math.floor(Math.random() * TITANS.length)];
+      openModal(pick.id);
+    });
+
+    // Modal
+    function openModal(id) {
+      const t = TITANS.find((item) => item.id === id);
+      if (!t) return;
+      mTitle.textContent = `${t.name} // Intel`;
+      mBody.innerHTML = `
+        <p class="dossier-sub"><strong>Class:</strong> ${t.clsLabel} &bull; <strong>Height:</strong> ${t.height}</p>
+        <p style="margin-bottom: 10px;">${t.desc}</p>
+        <ul class="spec-bullets">
+          ${t.traits.map((x) => `<li><strong>Capability:</strong> ${x}</li>`).join("")}
+          <li><strong>Weakness:</strong> ${t.flaw}</li>
+        </ul>
+        <button type="button" id="mDone" class="hud-btn btn-recon btn-pill">Done</button>
+      `;
+      overlay.classList.add("open");
+      document.getElementById("mDone").addEventListener("click", closeModal);
+    }
+
+    function closeModal() {
+      overlay.classList.remove("open");
+    }
+
+    document.getElementById("mClose").addEventListener("click", closeModal);
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeModal();
+    });
+
+    // Questionnaire
+    const qList = document.getElementById("qList");
+    const quizForm = document.getElementById("quizForm");
+    const qCounter = document.getElementById("qCounter");
+    const qMeter = document.getElementById("qMeter");
+    const qBanner = document.getElementById("qBanner");
+
+    function renderQuiz() {
+      qList.innerHTML = QUESTIONS.map(
+        (q) => `
+          <div class="q-card" data-q="${q.id}">
+            <div class="q-prompt">${q.text}</div>
+            <div class="q-choices">
+              ${q.opts
+                .map(
+                  (opt, idx) => `
+                    <label class="choice-tile" data-idx="${idx}">
+                      <input type="radio" name="${q.id}" value="${idx}" />
+                      <span>${opt}</span>
+                    </label>
+                  `
+                )
+                .join("")}
+            </div>
+            <div class="q-note" id="note-${q.id}">${q.note}</div>
+          </div>
+        `
+      ).join("");
+
+      quizForm.querySelectorAll('input[type="radio"]').forEach((r) =>
+        r.addEventListener("change", updateMeter)
+      );
+      updateMeter();
+    }
+
+    function updateMeter() {
+      const count = QUESTIONS.filter((q) =>
+        quizForm.querySelector(`input[name="${q.id}"]:checked`)
+      ).length;
+      qCounter.textContent = `${count} / ${QUESTIONS.length} Answered`;
+      qMeter.style.width = `${(count / QUESTIONS.length) * 100}%`;
+    }
+
+    quizForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      let score = 0;
+
+      quizForm.querySelectorAll(".choice-tile").forEach((el) => el.classList.remove("right", "wrong"));
+
+      QUESTIONS.forEach((q) => {
+        const picked = quizForm.querySelector(`input[name="${q.id}"]:checked`);
+        const card = quizForm.querySelector(`[data-q="${q.id}"]`);
+        const note = document.getElementById(`note-${q.id}`);
+        note.classList.add("visible");
+
+        const rightTile = card.querySelector(`[data-idx="${q.ans}"]`);
+        if (rightTile) rightTile.classList.add("right");
+
+        if (picked) {
+          const val = Number(picked.value);
+          if (val === q.ans) score++;
+          else picked.closest(".choice-tile").classList.add("wrong");
+        }
+      });
+
+      const title =
+        score === 5 ? "Squad Leader Grade" : score >= 3 ? "Field Scout Grade" : "Cadet Trainee Grade";
+
+      qBanner.innerHTML = `
+        <strong>Score: ${score} / ${QUESTIONS.length} — ${title}</strong>
+        <p class="dossier-sub" style="margin-top: 6px; margin-bottom: 0;">
+          Green outlines indicate correct answers; review the notes below each question.
+        </p>
+      `;
+      qBanner.classList.add("show");
+    });
+
+    document.getElementById("qResetBtn").addEventListener("click", () => {
+      quizForm.reset();
+      qBanner.classList.remove("show");
+      qBanner.innerHTML = "";
+      renderQuiz();
+    });
+
+    renderMatrix();
+    renderDeck();
+    renderQuiz();
+  </script>
+</body>
+</html>
